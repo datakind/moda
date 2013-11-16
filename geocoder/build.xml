@@ -11,6 +11,7 @@
     <property name="source" value="1.6"/>
     <path id="Geocode.classpath">
         <pathelement location="."/>
+        <pathelement location="./lib/jcsv-1.4.0.jar" />
     </path>
     <target name="init">
         <copy includeemptydirs="false" todir=".">
