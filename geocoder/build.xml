@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="Geocode">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="Geocode.classpath">
+        <pathelement location="."/>
+    </path>
+    <target name="init">
+        <copy includeemptydirs="false" todir=".">
+            <fileset dir=".">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete>
+            <fileset dir="." includes="**/*.class"/>
+        </delete>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="." includeantruntime="false" source="${source}" target="${target}">
+            <src path="."/>
+            <classpath refid="Geocode.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="Address">
+        <java classname="Parser.Address" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="DataLookup">
+        <java classname="Parser.DataLookup" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="Geocode">
+        <java classname="Geocoder.Geocode" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="GeoMatcher">
+        <java classname="Geocoder.GeoMatcher" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="GeoSignature">
+        <java classname="Geocoder.GeoSignature" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="House">
+        <java classname="Parser.House" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="In (1)">
+        <java classname="Parser.In" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="Intersection">
+        <java classname="Parser.Intersection" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="Intersector">
+        <java classname="Parser.Intersector" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="NameMatch">
+        <java classname="Parser.NameMatch" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="Parser">
+        <java classname="Parser.Parser" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="Street">
+        <java classname="Parser.Street" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+    <target name="GeoLocation">
+        <java classname="Geocoder.GeoLocation" failonerror="true" fork="yes">
+            <classpath refid="Geocode.classpath"/>
+        </java>
+    </target>
+</project>
