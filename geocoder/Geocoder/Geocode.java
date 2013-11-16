@@ -1,15 +1,26 @@
 package Geocoder;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
-import java.io.File;
 import java.util.HashMap;
+import java.util.regex.Pattern;
+
 import Parser.DataLookup;
 import Parser.In;
 import Parser.Out;
 import Parser.Parser;
-import Parser.StdOut;
 import Parser.StdIn;
+import Parser.StdOut;
+
+import com.googlecode.jcsv.CSVStrategy;
+import com.googlecode.jcsv.reader.CSVEntryParser;
+import com.googlecode.jcsv.reader.CSVReader;
+import com.googlecode.jcsv.reader.internal.CSVReaderBuilder;
 public class Geocode {
 	
 	public int count_obs=0, count_geomatch=0, count_x_y=0, count_bin=0, count_bbl=0, count_feature_name_match=0;
@@ -114,48 +125,69 @@ public class Geocode {
 		StdOut.println("Geocode in progress...");
 		
 		//loop to assign address ID
-		while (!file.isEmpty()){
-			
-			rawLine = file.readLine();	
-			line = rawLine.split(Pattern.quote(splitchar));
-			
-			zipCode = "";
-			Borough = "";
-			City = "";
-			building = "";
-			stname = "";
-			addr = "";
-			
-			if (zIndex>=0 && zIndex<line.length) zipCode = line[zIndex].replaceAll("[^0-9]","");
-			if (bIndex>=0 && bIndex<line.length) Borough = Parser.compbl(line[bIndex].replaceAll("[^0-9A-Za-z\\s]","").toUpperCase().trim());
-			if (cIndex>=0 && cIndex<line.length) City = Parser.compbl(line[cIndex].replaceAll("[^A-Za-z\\s]","").toUpperCase().trim());
-			
-			//get possible boros from any combination of 3 inputs
-			ArrayList<String> boros = m.getBoros(Borough, zipCode, City);
-			
-			GeoSignature sig;
-			if (hIndex>=0 && sIndex>=0 && hIndex !=sIndex) {
-				if (hIndex<line.length) building = line[hIndex];
-				if (sIndex<line.length) stname = line[sIndex];
-				sig = new GeoSignature(m, boros, building, stname);		
-			}
-			else {
-				if (hIndex>=0 && hIndex<line.length) addr = line[hIndex];
-				else if (sIndex>=0 && sIndex<line.length) addr = line[sIndex];
-				//get components of geo entry
-				sig = new GeoSignature(m, boros, addr);				
-			}
+		Reader reader = null;
+        try {
+            File dataFile = new File(filenameIn);
+            if (file.exists()) {
+                reader = new FileReader(dataFile);
+            } else {
+                URL url = getClass().getResource(filenameIn);
 
-			//assign legit identifiers
-			GeoLocation loc = new GeoLocation(m, sig, boros);
-			
-			outFile.println(loc.addressID + splitchar + rawLine + splitchar + loc.correctHouse + splitchar + loc.correctFeatureName1 + 
-					splitchar + loc.correctFeatureName2 + splitchar + loc.correctBoro);
-			
-			count_obs++;
-			if (loc.addressID.length()>0) count_geomatch++;
-			if (loc.correctFeatureName1.length()>0 && (sig.isAddress || loc.correctFeatureName2.length()>0)) this.count_feature_name_match++;
-		}
+                reader = new InputStreamReader(url.openStream());
+            }
+
+            CSVReader<String[]> csvParser = new CSVReaderBuilder<String[]>(reader)
+                    .strategy(new CSVStrategy(splitchar.charAt(0), '\"', '#', false, true))
+                    .entryParser(new CSVEntryParser<String[]>() {
+                        public String[] parseEntry(String... data) { return data; }
+                    })
+                    .build();
+            while ((line = csvParser.readNext()) != null) {
+
+                zipCode = "";
+                Borough = "";
+                City = "";
+                building = "";
+                stname = "";
+                addr = "";
+                
+                if (zIndex>=0 && zIndex<line.length) zipCode = line[zIndex].replaceAll("[^0-9]","");
+                if (bIndex>=0 && bIndex<line.length) Borough = Parser.compbl(line[bIndex].replaceAll("[^0-9A-Za-z\\s]","").toUpperCase().trim());
+                if (cIndex>=0 && cIndex<line.length) City = Parser.compbl(line[cIndex].replaceAll("[^A-Za-z\\s]","").toUpperCase().trim());
+                
+                //get possible boros from any combination of 3 inputs
+                ArrayList<String> boros = m.getBoros(Borough, zipCode, City);
+                
+                GeoSignature sig;
+                if (hIndex>=0 && sIndex>=0 && hIndex !=sIndex) {
+                    if (hIndex<line.length) building = line[hIndex];
+                    if (sIndex<line.length) stname = line[sIndex];
+                    sig = new GeoSignature(m, boros, building, stname);     
+                }
+                else {
+                    if (hIndex>=0 && hIndex<line.length) addr = line[hIndex];
+                    else if (sIndex>=0 && sIndex<line.length) addr = line[sIndex];
+                    //get components of geo entry
+                    sig = new GeoSignature(m, boros, addr);             
+                }
+
+                //assign legit identifiers
+                GeoLocation loc = new GeoLocation(m, sig, boros);
+                
+                outFile.println(loc.addressID + splitchar + rawLine + splitchar + loc.correctHouse + splitchar + loc.correctFeatureName1 + 
+                        splitchar + loc.correctFeatureName2 + splitchar + loc.correctBoro);
+                
+                count_obs++;
+                if (loc.addressID.length()>0) count_geomatch++;
+                if (loc.correctFeatureName1.length()>0 && (sig.isAddress || loc.correctFeatureName2.length()>0)) this.count_feature_name_match++;
+
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try { reader.close(); } catch (Exception e) { }
+        }
+
 		percent = 100* count_geomatch/((double)count_obs);
 		System.out.println(df.format(percent) + "% were matched to valid geographic locations");
 		percent = 100*count_feature_name_match/((double)count_obs);

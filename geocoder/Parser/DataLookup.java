@@ -1,45 +1,96 @@
 package Parser;
 
-import java.util.ArrayList; 
-import java.util.HashMap; 
-import java.util.regex.Pattern;
-import java.lang.String;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
-import Parser.In;
+import com.googlecode.jcsv.CSVStrategy;
+import com.googlecode.jcsv.reader.CSVEntryParser;
+import com.googlecode.jcsv.reader.CSVReader;
+import com.googlecode.jcsv.reader.internal.CSVReaderBuilder;
 
 public class DataLookup {
-	
-	private String filepath, delim;
+
+    /** The path to the data-file */
+	private String filepath;
+	/** The delimiter string/character to split each line on */
+	private String delim;
 	
 	// constructor
 	public DataLookup (String filepath, String delim){
 		this.filepath = filepath;
 		this.delim = delim;
 	}
-	
-	
-	// index of variable in dataset
-	public int varNum(String varName){
-		int varIndex = -1;
-		if (varName.length()==0) return varIndex;
-		In inputFile;
-        inputFile = new In(filepath);	
-        // search for key and value indexes in header record
-        String headerline = inputFile.readLine();
-        //System.out.println(headerline);
-        String[] headers = headerline.split(Pattern.quote(delim));
-        int nVar = headers.length;
-        for (int i = 0; i < nVar; i++) {
-            if (headers[i].toLowerCase().trim().replaceAll("\"","").equals(varName.toLowerCase().trim())) {
-            	varIndex = i;
-            	break;
-            }
-        }
-        inputFile.close();
-        return varIndex; 
+
+	/**
+	 * 
+	 * @param headerName
+	 * @return The header name, in lowercase, with quotes and extra whitespace
+	 *     removed
+	 */
+	private String normalizeHeaderName(String headerName) {
+	    return headerName.toLowerCase()
+	            .replaceAll("\"", "")
+	            .trim();
+	}
+
+	/**
+	 * Parses the header-line to determine the index of the given column-name
+	 * @param varName The name of the column
+	 * @return The 0-based index of the column with the supplied name; -1 
+	 * @throws IOException 
+	 */
+	public int varNum(String varName) {
+	    if (varName == null || varName.length() == 0) {
+	        return -1;
+	    }
+
+	    Reader reader = null;
+	    int varIndex = -1;
+	    try {
+	        File file = new File(this.filepath);
+	        if (file.exists()) {
+	            reader = new FileReader(file);
+	        } else {
+	            URL url = getClass().getResource(this.filepath);
+
+	            reader = new InputStreamReader(url.openStream());
+	        }
+
+	        CSVReader<String[]> csvParser = new CSVReaderBuilder<String[]>(reader)
+	                .strategy(new CSVStrategy(this.delim.charAt(0), '\"', '#', false, true))
+	                .entryParser(new CSVEntryParser<String[]>() {
+	                    public String[] parseEntry(String... data) { return data; }
+	                })
+	                .build();
+	        List<String> headers = csvParser.readHeader();
+
+	        for (int i = 0; i < headers.size(); ++i) {
+	            String header = headers.get(i);
+
+	            if (this.normalizeHeaderName(header)
+	                    .equals(this.normalizeHeaderName(varName))) {
+	                varIndex = i;
+	            }
+	        }
+	    } catch (IOException ioException) {
+	        try { reader.close(); } catch (Exception e) { }
+	        throw new RuntimeException(ioException);
+	    }
+
+	    return varIndex;
 	}
 	
 	// number of observations
