@@ -1,12 +1,15 @@
 package Geocoder;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -17,7 +20,7 @@ public class GeocodeUI extends JPanel
     private static final long serialVersionUID = 3610491923112278696L;
 
     JLabel inputFileLabel, outputFileLabel, delimiterFileLabel, buildingNumberColumnLabel, streetNameColumnLabel;
-    JLabel zipCodeColumnLabel, boroColumnLabel, cityColumnLabel;
+    JLabel zipCodeColumnLabel, boroColumnLabel, cityColumnLabel, inputColumnLabel, inputColumnExplanationLabel;
     
     JTextField inputFileTextField, outputFileTextField, delimiterFileTextField, buildingNumberColumnTextField;
     JTextField steetNameColumnTextField, zipCodeColumnTextField, boroColumnTextField, cityColumnTextField;
@@ -41,8 +44,14 @@ public class GeocodeUI extends JPanel
         
         delimiterFileLabel = new JLabel("Input file delimiter:");
         add(delimiterFileLabel);
-        delimiterFileTextField = new JTextField(1);
+        delimiterFileTextField = new JTextField(",",1);
         add(delimiterFileTextField);
+        
+        inputColumnLabel = new JLabel("Input file columns:");
+        add(inputColumnLabel);
+        inputColumnExplanationLabel = new JLabel("The same column may be used multiple times!");
+        add(inputColumnExplanationLabel);
+        
         
         buildingNumberColumnLabel = new JLabel("Building number column:");
         add(buildingNumberColumnLabel);
@@ -76,27 +85,50 @@ public class GeocodeUI extends JPanel
 
     public void actionPerformed(ActionEvent e) {
 
-        //Handle open button action.
+        //Run the geocoder after validating input.
         if (e.getSource() == startGeocodeButton) {
-        	/* String filenameIn,
-        	 * String filenameOut, 
-        	 * String splitchar,
-        	 * String houseNumberVar
-        	 * String streetNameVar
-        	 * String zipCodeVar
-        	 * String boroVar
-        	 * String townVar */
-        	new Geocode(
-        				inputFileTextField.getText(),
-        				outputFileTextField.getText(),
-        				null,
-        				null,
-        				delimiterFileTextField.getText(),
-        				buildingNumberColumnTextField.getText(),
-        				steetNameColumnTextField.getText(),
-        				zipCodeColumnTextField.getText(),
-        				boroColumnTextField.getText(),
-        				cityColumnTextField.getText());
+       	        	
+        	// Get the inputs 
+        	String inputFile = inputFileTextField.getText().trim();
+        	File tfile = new File(inputFile);
+        	String outputFile = outputFileTextField.getText().trim();
+			String delimiterFile = delimiterFileTextField.getText().trim();
+			String buildingNumberColumn = buildingNumberColumnTextField.getText().trim();
+			String steetNameColumn = steetNameColumnTextField.getText().trim();
+			String zipCodeColumn = zipCodeColumnTextField.getText().trim();
+			String boroColumn = boroColumnTextField.getText().trim();
+			String cityColumn = cityColumnTextField.getText().trim();
+			
+			// validate those inputs (more validation done in Geocoder, this is the bare minimum
+        	if (outputFile.equals("temp.txt") ) {
+        		JOptionPane.showMessageDialog(null,
+        			    "Out File cannot be temp.txt! This file is used by the Geocoder application.");
+        	}
+        	else if (!tfile.exists()) { 
+        		JOptionPane.showMessageDialog(null,
+        			    "Input File must be a valid file!");
+        	}
+        	else if (delimiterFile.length() > 1) {
+        		JOptionPane.showMessageDialog(null,
+        			    "Delimiter not be more than one character in length.");
+        	}
+        	else if (buildingNumberColumn.equals("") && steetNameColumn.equals("")) {
+        		JOptionPane.showMessageDialog(null,
+        			    "Either Building Number Column or Street Name Column must be specfied.");
+        	}
+        	else {
+        		Geocode geocode = new Geocode(
+        				inputFile,
+        				outputFile,
+        				"", "", // TODO error-log file and unmatched-address file
+        				delimiterFile,
+        				buildingNumberColumn,
+        				steetNameColumn,
+        				zipCodeColumn,
+        				boroColumn,
+        				cityColumn);
+        	}
+
         }
     }
 
@@ -113,6 +145,7 @@ public class GeocodeUI extends JPanel
         frame.add(new GeocodeUI());
 
         //Display the window.
+        frame.getContentPane().setPreferredSize(new Dimension(500, 300));
         frame.pack();
         frame.setVisible(true);
     }
