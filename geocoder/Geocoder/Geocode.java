@@ -31,10 +31,11 @@ public class Geocode {
 
 	/**
 	 * 
-	 * @param inputFile
-	 * @param outputFile
-	 * @param logFile
-	 * @param unmatchedAddressFile
+	 * @param inputFilePath
+	 * @param outputFilePath If <code>null</code>, the output will overwrite
+	 *   the input file.
+	 * @param logFilePath
+	 * @param unmatchedAddressFilePath
 	 * @param columnCharDelimiter
 	 * @param columnNameForBuildingNumber
 	 * @param columnNameForStreetName
@@ -42,8 +43,8 @@ public class Geocode {
 	 * @param columnNameForBorough
 	 * @param columnNameForCity
 	 */
-	public Geocode(String inputFile, String outputFile,
-	        String logFile, String unmatchedAddressFile,
+	public Geocode(String inputFilePath, String outputFilePath,
+	        String logFilePath, String unmatchedAddressFilePath,
 	        String columnCharDelimiter,
 	        String columnNameForBuildingNumber, String columnNameForStreetName,
 	        String columnNameForZipCode, String columnNameForBorough,
@@ -52,47 +53,63 @@ public class Geocode {
 		int N_args = 0;
 		double percent;
 		DecimalFormat df = new DecimalFormat("#.0");
-		
-		if (outputFile.equals("temp.txt")) throw new RuntimeException("You cannot name the outfile temp.txt, as this name is already in use.");
-		else if (outputFile.equals("")) outputFile = inputFile;
 
-		File tfile = new File(inputFile);
-		if (tfile.exists()==false) throw new RuntimeException(inputFile + " does not exist.");
-		
-		String rawLine = "", zipCode = "", Borough ="", City="", addr="", building="", stname="";
+		// TODO Just make the temp-file an extra parameter?
+		if (inputFilePath.equals("temp.txt")
+		        || outputFilePath.equals("temp.txt")
+		        || logFilePath.equals("temp.txt")
+		        || unmatchedAddressFilePath.equals("temp.txt")) {
+		    throw new RuntimeException("You cannot name any of the output files 'temp.txt', as this name is already in use.");
+		}
+
+		if (outputFilePath.equals("")) {
+		    outputFilePath = inputFilePath;
+		}
+
+		File inputFile = new File(inputFilePath);
+		if (!inputFile.exists()) {
+		    throw new RuntimeException("The input file '" + inputFilePath + "' does not exist.");
+		}
+
+		String rawLine = "", zipCode = "", Borough ="",
+		        City="", addr="", building="", stname="";
 		Out outFile;
-		
-		int hIndex =-1, sIndex=-1, zIndex=-1, bIndex=-1, cIndex=-1;
 
-		DataLookup f = new DataLookup(inputFile,columnCharDelimiter);
+		int indexOfBuildingNumberColumn = -1,
+		        indexOfStreetNumberColumn = -1,
+		        indexOfZipCodeColumn = -1,
+		        indexOfBoroughColumn = -1,
+		        indexOfCityColumn = -1;
+
+		DataLookup dataLookup = new DataLookup(inputFilePath,columnCharDelimiter);
 		
-		hIndex = f.varNum(columnNameForBuildingNumber);
-		sIndex = f.varNum(columnNameForStreetName);
-		zIndex = f.varNum(columnNameForZipCode);
-		bIndex = f.varNum(columnNameForBorough);
-		cIndex = f.varNum(columnNameForCity);
+		indexOfBuildingNumberColumn = dataLookup.varNum(columnNameForBuildingNumber);
+		indexOfStreetNumberColumn = dataLookup.varNum(columnNameForStreetName);
+		indexOfZipCodeColumn = dataLookup.varNum(columnNameForZipCode);
+		indexOfBoroughColumn = dataLookup.varNum(columnNameForBorough);
+		indexOfCityColumn = dataLookup.varNum(columnNameForCity);
 		
-		if (hIndex<0 && columnNameForBuildingNumber.length()>0) {
+		if (indexOfBuildingNumberColumn<0 && columnNameForBuildingNumber.length()>0) {
 			StdOut.println("ERROR: " + columnNameForBuildingNumber + " not on input file.");
 			return;
 		}
-		if (sIndex<0 && columnNameForStreetName.length()>0) {
+		if (indexOfStreetNumberColumn<0 && columnNameForStreetName.length()>0) {
 			StdOut.println("ERROR: " + columnNameForStreetName + " not on input file.");
 			return;
 		}
-		if (zIndex<0 && columnNameForZipCode.length()>0) {
+		if (indexOfZipCodeColumn<0 && columnNameForZipCode.length()>0) {
 			StdOut.println("ERROR: " + columnNameForZipCode + " not on input file.");
 			return;
 		}
-		if (bIndex<0 && columnNameForBorough.length()>0) {
+		if (indexOfBoroughColumn<0 && columnNameForBorough.length()>0) {
 			StdOut.println("ERROR: " + columnNameForBorough + " not on input file.");
 			return;
 		}
-		if (cIndex<0 && columnNameForCity.length()>0) {
+		if (indexOfCityColumn<0 && columnNameForCity.length()>0) {
 			StdOut.println("ERROR: " + columnNameForCity + " not on input file.");
 			return;
 		}
-		if (hIndex<0 && sIndex<0) {
+		if (indexOfBuildingNumberColumn<0 && indexOfStreetNumberColumn<0) {
 			StdOut.println("ERROR: Neither house number nor street name specified");
 			return;
 		}
@@ -121,17 +138,21 @@ public class Geocode {
 		File tempfile;
 		tempfile =new File("temp.txt");
 
-		file = new In(inputFile);
+		file = new In(inputFilePath);
 		rawLine = file.readLine();	
 
 		outFile = new Out(tempfile.getAbsolutePath());		
-		outFile.println("addressid" + columnCharDelimiter + rawLine + columnCharDelimiter + "parsed_house_number" + columnCharDelimiter + "parsed_feature_name1" 
-				+ columnCharDelimiter + "parsed_feature_name2" + columnCharDelimiter + "parsed_boro");
-		
+		outFile.println("addressid"
+		        + columnCharDelimiter + rawLine
+		        + columnCharDelimiter + "parsed_house_number"
+		        + columnCharDelimiter + "parsed_feature_name1" 
+				+ columnCharDelimiter + "parsed_feature_name2"
+		        + columnCharDelimiter + "parsed_boro");
+
 		String[] line = rawLine.split(columnCharDelimiter);
-		
+
 		if (line.length < N_args) {
-			StdOut.println("ERROR: '" + columnCharDelimiter + "' does not appear to be the correct delimiter for input file " + inputFile);
+			StdOut.println("ERROR: '" + columnCharDelimiter + "' does not appear to be the correct delimiter for input file " + inputFilePath);
 			file.close();
 			return;
 		}
@@ -146,11 +167,11 @@ public class Geocode {
 		//loop to assign address ID
 		Reader reader = null;
         try {
-            File dataFile = new File(inputFile);
+            File dataFile = new File(inputFilePath);
             if (file.exists()) {
                 reader = new FileReader(dataFile);
             } else {
-                URL url = getClass().getResource(inputFile);
+                URL url = getClass().getResource(inputFilePath);
 
                 reader = new InputStreamReader(url.openStream());
             }
@@ -170,22 +191,22 @@ public class Geocode {
                 stname = "";
                 addr = "";
                 
-                if (zIndex>=0 && zIndex<line.length) zipCode = line[zIndex].replaceAll("[^0-9]","");
-                if (bIndex>=0 && bIndex<line.length) Borough = Parser.compbl(line[bIndex].replaceAll("[^0-9A-Za-z\\s]","").toUpperCase().trim());
-                if (cIndex>=0 && cIndex<line.length) City = Parser.compbl(line[cIndex].replaceAll("[^A-Za-z\\s]","").toUpperCase().trim());
+                if (indexOfZipCodeColumn>=0 && indexOfZipCodeColumn<line.length) zipCode = line[indexOfZipCodeColumn].replaceAll("[^0-9]","");
+                if (indexOfBoroughColumn>=0 && indexOfBoroughColumn<line.length) Borough = Parser.compbl(line[indexOfBoroughColumn].replaceAll("[^0-9A-Za-z\\s]","").toUpperCase().trim());
+                if (indexOfCityColumn>=0 && indexOfCityColumn<line.length) City = Parser.compbl(line[indexOfCityColumn].replaceAll("[^A-Za-z\\s]","").toUpperCase().trim());
                 
                 //get possible boros from any combination of 3 inputs
                 ArrayList<String> boros = m.getBoros(Borough, zipCode, City);
                 
                 GeoSignature sig;
-                if (hIndex>=0 && sIndex>=0 && hIndex !=sIndex) {
-                    if (hIndex<line.length) building = line[hIndex];
-                    if (sIndex<line.length) stname = line[sIndex];
+                if (indexOfBuildingNumberColumn>=0 && indexOfStreetNumberColumn>=0 && indexOfBuildingNumberColumn !=indexOfStreetNumberColumn) {
+                    if (indexOfBuildingNumberColumn<line.length) building = line[indexOfBuildingNumberColumn];
+                    if (indexOfStreetNumberColumn<line.length) stname = line[indexOfStreetNumberColumn];
                     sig = new GeoSignature(m, boros, building, stname);     
                 }
                 else {
-                    if (hIndex>=0 && hIndex<line.length) addr = line[hIndex];
-                    else if (sIndex>=0 && sIndex<line.length) addr = line[sIndex];
+                    if (indexOfBuildingNumberColumn>=0 && indexOfBuildingNumberColumn<line.length) addr = line[indexOfBuildingNumberColumn];
+                    else if (indexOfStreetNumberColumn>=0 && indexOfStreetNumberColumn<line.length) addr = line[indexOfStreetNumberColumn];
                     //get components of geo entry
                     sig = new GeoSignature(m, boros, addr);             
                 }
@@ -220,7 +241,7 @@ public class Geocode {
 		HashMap<String,String> address_x_y = DataLookup.KeyLookup("/Geocoder/valid_addresses_x_y.csv",",","address", "x_y");
 		HashMap<String,String> intersection_x_y = DataLookup.KeyLookup("/Geocoder/lion_intersections.csv",",","intersection", "x_y");
 		file = new In("temp.txt");
-		outFile = new Out(outputFile);
+		outFile = new Out(outputFilePath);
 		rawLine = file.readLine();
 		outFile.println(rawLine + columnCharDelimiter + "x" + columnCharDelimiter + "y");		
 		String[] x_y = new String[2];
@@ -245,7 +266,7 @@ public class Geocode {
 		address_x_y = null;
 		intersection_x_y = null;
 		
-		file = new In(outputFile);
+		file = new In(outputFilePath);
 		outFile = new Out("temp.txt");
 		rawLine = file.readLine();
 		outFile.println(rawLine + columnCharDelimiter + "bin");	
@@ -268,7 +289,7 @@ public class Geocode {
 		
 		
 		file = new In("temp.txt");
-		outFile = new Out(outputFile);
+		outFile = new Out(outputFilePath);
 		rawLine = file.readLine();
 		outFile.println(rawLine + columnCharDelimiter + "bbl");		
 		HashMap<String,String> address_bbl = DataLookup.KeyLookup("/Geocoder/valid_addresses_bbl.csv",",","address", "bbl");
@@ -287,8 +308,8 @@ public class Geocode {
 		file.close();		
 		address_bbl = null;		
 		
-		tfile = new File("temp.txt");
-		tfile.delete();
+		inputFile = new File("temp.txt");
+		inputFile.delete();
 		
 		final double end = System.currentTimeMillis();
 		double minutes = ((double)(end - start))/60000;
