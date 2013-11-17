@@ -44,7 +44,7 @@ public class Geocode {
 	 * @param columnNameForCity
 	 */
 	public Geocode(String inputFilePath, String outputFilePath,
-	        String logFilePath, String unmatchedAddressFilePath,
+//	        String logFilePath, String unmatchedAddressFilePath,
 	        String columnCharDelimiter,
 	        String columnNameForBuildingNumber, String columnNameForStreetName,
 	        String columnNameForZipCode, String columnNameForBorough,
@@ -56,8 +56,9 @@ public class Geocode {
 		// TODO Just make the temp-file an extra parameter?
 		if (inputFilePath.equals("temp.txt")
 		        || outputFilePath.equals("temp.txt")
-		        || logFilePath.equals("temp.txt")
-		        || unmatchedAddressFilePath.equals("temp.txt")) {
+//		        || logFilePath.equals("temp.txt")
+//		        || unmatchedAddressFilePath.equals("temp.txt")
+		        ) {
 		    throw new RuntimeException("You cannot name any of the output files 'temp.txt', as this name is already in use.");
 		}
 
@@ -351,7 +352,7 @@ public class Geocode {
 	 */
 	public static void main(String[] args) {
 
-	    if (args.length > 0 && args.length != 10) {
+	    if (args.length > 0 && args.length != 8) {
 	        StdOut.println("usage (without arguments): Geocode");
 	        StdOut.println("usage (with arguments): Geocode inputFile outputFile logFile unmatchedAddressFile columnCharDelimiter "
 	                + "columnNameForBuildingNumber columnNameForStreetName columnNameForZipCode columnNameForBorough columnNameForCity");
@@ -361,8 +362,8 @@ public class Geocode {
 
 	    String inputFile,                      // 0
 	            outputFile,                    // 1
-	            logFile,                       // 2
-                unmatchedAddressFile,          // 3
+//	            logFile,                       // 2
+//                unmatchedAddressFile,          // 3
                 columnCharDelimiter,           // 4
                 columnNameForBuildingNumber,   // 5
                 columnNameForStreetName,       // 6
@@ -386,11 +387,11 @@ public class Geocode {
 			StdOut.println("Do you want to create a new file with the output? Enter the full path of the new file to create:");
 			outputFile = StdIn.readLine().replace("\\", "/");
 
-			StdOut.println("File to write output/logging/error messages to:");
-			logFile = StdIn.readLine().replace("\\", "/");
-
-            StdOut.println("File to write unmatched addresses to:");
-            unmatchedAddressFile = StdIn.readLine().replace("\\", "/");
+//			StdOut.println("File to write output/logging/error messages to:");
+//			logFile = StdIn.readLine().replace("\\", "/");
+//
+//            StdOut.println("File to write unmatched addresses to:");
+//            unmatchedAddressFile = StdIn.readLine().replace("\\", "/");
 
 			StdOut.println("What is the delimiter for the input file?");
 			columnCharDelimiter = StdIn.readLine();
@@ -415,8 +416,8 @@ public class Geocode {
 		    int i = 0;
 	        inputFile = args[i++].replace("\\", "/");
 	        outputFile = args[i++].replace("\\", "/");
-	        logFile = args[i++].replace("\\", "/");
-	        unmatchedAddressFile = args[i++].replace("\\", "/");
+//	        logFile = args[i++].replace("\\", "/");
+//	        unmatchedAddressFile = args[i++].replace("\\", "/");
 	        columnCharDelimiter = args[i++];
 	        columnNameForBuildingNumber = args[i++];
 	        columnNameForStreetName = args[i++];
@@ -426,7 +427,7 @@ public class Geocode {
 		}
 
 		new Geocode(inputFile, outputFile,
-                logFile, unmatchedAddressFile,
+//                logFile, unmatchedAddressFile,
                 columnCharDelimiter, columnNameForBuildingNumber,
                 columnNameForStreetName, columnNameForZipCode,
                 columnNameForBorough, columnNameForCity);

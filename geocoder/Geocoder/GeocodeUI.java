@@ -120,7 +120,7 @@ public class GeocodeUI extends JPanel
         		Geocode geocode = new Geocode(
         				inputFile,
         				outputFile,
-        				"", "", // TODO error-log file and unmatched-address file
+//        				"", "", // TODO error-log file and unmatched-address file
         				delimiterFile,
         				buildingNumberColumn,
         				steetNameColumn,
