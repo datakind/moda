@@ -28,49 +28,68 @@ public class Geocode {
 	private static boolean isIntersection(String id){
 		return id.length()==12 && !id.contains(" ");
 	}
-	public Geocode( String filenameIn, String filenameOut, String splitchar, String houseNumberVar, String streetNameVar, 
-					String zipCodeVar, String boroVar, String townVar) {
+
+	/**
+	 * 
+	 * @param inputFile
+	 * @param outputFile
+	 * @param logFile
+	 * @param unmatchedAddressFile
+	 * @param columnCharDelimiter
+	 * @param columnNameForBuildingNumber
+	 * @param columnNameForStreetName
+	 * @param columnNameForZipCode
+	 * @param columnNameForBorough
+	 * @param columnNameForCity
+	 */
+	public Geocode(String inputFile, String outputFile,
+	        String logFile, String unmatchedAddressFile,
+	        String columnCharDelimiter,
+	        String columnNameForBuildingNumber, String columnNameForStreetName,
+	        String columnNameForZipCode, String columnNameForBorough,
+	        String columnNameForCity) {
 		final double start = System.currentTimeMillis();
 		int N_args = 0;
 		double percent;
 		DecimalFormat df = new DecimalFormat("#.0");
 		
-		if (filenameOut.equals("temp.txt")) throw new RuntimeException("You cannot name the outfile temp.txt, as this name is already in use.");
-		else if (filenameOut.equals("")) filenameOut = filenameIn;
-		File tfile = new File(filenameIn);
-		if (tfile.exists()==false) throw new RuntimeException(filenameIn + " does not exist.");
+		if (outputFile.equals("temp.txt")) throw new RuntimeException("You cannot name the outfile temp.txt, as this name is already in use.");
+		else if (outputFile.equals("")) outputFile = inputFile;
+
+		File tfile = new File(inputFile);
+		if (tfile.exists()==false) throw new RuntimeException(inputFile + " does not exist.");
 		
 		String rawLine = "", zipCode = "", Borough ="", City="", addr="", building="", stname="";
 		Out outFile;
 		
 		int hIndex =-1, sIndex=-1, zIndex=-1, bIndex=-1, cIndex=-1;
 
-		DataLookup f = new DataLookup(filenameIn,splitchar);
+		DataLookup f = new DataLookup(inputFile,columnCharDelimiter);
 		
-		hIndex = f.varNum(houseNumberVar);
-		sIndex = f.varNum(streetNameVar);
-		zIndex = f.varNum(zipCodeVar);
-		bIndex = f.varNum(boroVar);
-		cIndex = f.varNum(townVar);
+		hIndex = f.varNum(columnNameForBuildingNumber);
+		sIndex = f.varNum(columnNameForStreetName);
+		zIndex = f.varNum(columnNameForZipCode);
+		bIndex = f.varNum(columnNameForBorough);
+		cIndex = f.varNum(columnNameForCity);
 		
-		if (hIndex<0 && houseNumberVar.length()>0) {
-			StdOut.println("ERROR: " + houseNumberVar + " not on input file.");
+		if (hIndex<0 && columnNameForBuildingNumber.length()>0) {
+			StdOut.println("ERROR: " + columnNameForBuildingNumber + " not on input file.");
 			return;
 		}
-		if (sIndex<0 && streetNameVar.length()>0) {
-			StdOut.println("ERROR: " + streetNameVar + " not on input file.");
+		if (sIndex<0 && columnNameForStreetName.length()>0) {
+			StdOut.println("ERROR: " + columnNameForStreetName + " not on input file.");
 			return;
 		}
-		if (zIndex<0 && zipCodeVar.length()>0) {
-			StdOut.println("ERROR: " + zipCodeVar + " not on input file.");
+		if (zIndex<0 && columnNameForZipCode.length()>0) {
+			StdOut.println("ERROR: " + columnNameForZipCode + " not on input file.");
 			return;
 		}
-		if (bIndex<0 && boroVar.length()>0) {
-			StdOut.println("ERROR: " + boroVar + " not on input file.");
+		if (bIndex<0 && columnNameForBorough.length()>0) {
+			StdOut.println("ERROR: " + columnNameForBorough + " not on input file.");
 			return;
 		}
-		if (cIndex<0 && townVar.length()>0) {
-			StdOut.println("ERROR: " + townVar + " not on input file.");
+		if (cIndex<0 && columnNameForCity.length()>0) {
+			StdOut.println("ERROR: " + columnNameForCity + " not on input file.");
 			return;
 		}
 		if (hIndex<0 && sIndex<0) {
@@ -78,41 +97,41 @@ public class Geocode {
 			return;
 		}
 
-		if (houseNumberVar.length()>0) {
-			StdOut.println("House number var: " + houseNumberVar);
+		if (columnNameForBuildingNumber.length()>0) {
+			StdOut.println("House number var: " + columnNameForBuildingNumber);
 			N_args++;
 		}
-		if (streetNameVar.length()>0) {
-			StdOut.println("Street name var: " + streetNameVar);
+		if (columnNameForStreetName.length()>0) {
+			StdOut.println("Street name var: " + columnNameForStreetName);
 			N_args++;
 		}
-		if (zipCodeVar.length()>0) {
-			StdOut.println("ZIP var: " + zipCodeVar);
+		if (columnNameForZipCode.length()>0) {
+			StdOut.println("ZIP var: " + columnNameForZipCode);
 			N_args++;
 		}
-		if (boroVar.length()>0) {
-			StdOut.println("BORO var: " + boroVar);
+		if (columnNameForBorough.length()>0) {
+			StdOut.println("BORO var: " + columnNameForBorough);
 			N_args++;
 		}
-		if (townVar.length()>0) {
-			StdOut.println("Town/City/Neighborhood var: " + townVar);
+		if (columnNameForCity.length()>0) {
+			StdOut.println("Town/City/Neighborhood var: " + columnNameForCity);
 			N_args++;
 		}
 		In file;
 		File tempfile;
 		tempfile =new File("temp.txt");
 
-		file = new In(filenameIn);
+		file = new In(inputFile);
 		rawLine = file.readLine();	
 
 		outFile = new Out(tempfile.getAbsolutePath());		
-		outFile.println("addressid" + splitchar + rawLine + splitchar + "parsed_house_number" + splitchar + "parsed_feature_name1" 
-				+ splitchar + "parsed_feature_name2" + splitchar + "parsed_boro");
+		outFile.println("addressid" + columnCharDelimiter + rawLine + columnCharDelimiter + "parsed_house_number" + columnCharDelimiter + "parsed_feature_name1" 
+				+ columnCharDelimiter + "parsed_feature_name2" + columnCharDelimiter + "parsed_boro");
 		
-		String[] line = rawLine.split(splitchar);
+		String[] line = rawLine.split(columnCharDelimiter);
 		
 		if (line.length < N_args) {
-			StdOut.println("ERROR: '" + splitchar + "' does not appear to be the correct delimiter for input file " + filenameIn);
+			StdOut.println("ERROR: '" + columnCharDelimiter + "' does not appear to be the correct delimiter for input file " + inputFile);
 			file.close();
 			return;
 		}
@@ -127,17 +146,17 @@ public class Geocode {
 		//loop to assign address ID
 		Reader reader = null;
         try {
-            File dataFile = new File(filenameIn);
+            File dataFile = new File(inputFile);
             if (file.exists()) {
                 reader = new FileReader(dataFile);
             } else {
-                URL url = getClass().getResource(filenameIn);
+                URL url = getClass().getResource(inputFile);
 
                 reader = new InputStreamReader(url.openStream());
             }
 
             CSVReader<String[]> csvParser = new CSVReaderBuilder<String[]>(reader)
-                    .strategy(new CSVStrategy(splitchar.charAt(0), '\"', '#', false, true))
+                    .strategy(new CSVStrategy(columnCharDelimiter.charAt(0), '\"', '#', false, true))
                     .entryParser(new CSVEntryParser<String[]>() {
                         public String[] parseEntry(String... data) { return data; }
                     })
@@ -174,8 +193,8 @@ public class Geocode {
                 //assign legit identifiers
                 GeoLocation loc = new GeoLocation(m, sig, boros);
                 
-                outFile.println(loc.addressID + splitchar + rawLine + splitchar + loc.correctHouse + splitchar + loc.correctFeatureName1 + 
-                        splitchar + loc.correctFeatureName2 + splitchar + loc.correctBoro);
+                outFile.println(loc.addressID + columnCharDelimiter + rawLine + columnCharDelimiter + loc.correctHouse + columnCharDelimiter + loc.correctFeatureName1 + 
+                        columnCharDelimiter + loc.correctFeatureName2 + columnCharDelimiter + loc.correctBoro);
                 
                 count_obs++;
                 if (loc.addressID.length()>0) count_geomatch++;
@@ -201,15 +220,15 @@ public class Geocode {
 		HashMap<String,String> address_x_y = DataLookup.KeyLookup("/Geocoder/valid_addresses_x_y.csv",",","address", "x_y");
 		HashMap<String,String> intersection_x_y = DataLookup.KeyLookup("/Geocoder/lion_intersections.csv",",","intersection", "x_y");
 		file = new In("temp.txt");
-		outFile = new Out(filenameOut);
+		outFile = new Out(outputFile);
 		rawLine = file.readLine();
-		outFile.println(rawLine + splitchar + "x" + splitchar + "y");		
+		outFile.println(rawLine + columnCharDelimiter + "x" + columnCharDelimiter + "y");		
 		String[] x_y = new String[2];
 		//loop to assign X-Y coords
 		while(!file.isEmpty()) {
 			String chunk = "", x="", y="";
 			rawLine = file.readLine();
-			String addressID = rawLine.substring(0, rawLine.indexOf(splitchar));
+			String addressID = rawLine.substring(0, rawLine.indexOf(columnCharDelimiter));
 			if (isIntersection(addressID)) chunk = intersection_x_y.get(addressID);
 			else if (addressID.length()>0) chunk = address_x_y.get(addressID);
 			x_y = chunk.split(Pattern.quote("|"));
@@ -217,7 +236,7 @@ public class Geocode {
 				x=x_y[0];
 				y=x_y[1];
 			}
-			outFile.println(rawLine + splitchar +x + splitchar + y);	
+			outFile.println(rawLine + columnCharDelimiter +x + columnCharDelimiter + y);	
 			if (x.length()>0) count_x_y++;
 		}
 		
@@ -226,19 +245,19 @@ public class Geocode {
 		address_x_y = null;
 		intersection_x_y = null;
 		
-		file = new In(filenameOut);
+		file = new In(outputFile);
 		outFile = new Out("temp.txt");
 		rawLine = file.readLine();
-		outFile.println(rawLine + splitchar + "bin");	
+		outFile.println(rawLine + columnCharDelimiter + "bin");	
 		HashMap<String,String> address_bin = DataLookup.KeyLookup("/Geocoder/valid_addresses_bin.csv",",","address", "bin");
 		//loop to assign bins
 		while(!file.isEmpty()) {
 			rawLine = file.readLine();
-			String addressID = rawLine.substring(0, rawLine.indexOf(splitchar));
+			String addressID = rawLine.substring(0, rawLine.indexOf(columnCharDelimiter));
 			String imputed_bin = "";
 			if (isIntersection(addressID)) imputed_bin=""; //intersections dont get bin....yet.
 			else if (addressID.length()>0) imputed_bin = address_bin.get(addressID);
-			outFile.println(rawLine + splitchar + imputed_bin);	
+			outFile.println(rawLine + columnCharDelimiter + imputed_bin);	
 			if (imputed_bin.length()>0) count_bin++;
 		}
 		percent = 100*count_bin/((double)count_obs);
@@ -249,17 +268,17 @@ public class Geocode {
 		
 		
 		file = new In("temp.txt");
-		outFile = new Out(filenameOut);
+		outFile = new Out(outputFile);
 		rawLine = file.readLine();
-		outFile.println(rawLine + splitchar + "bbl");		
+		outFile.println(rawLine + columnCharDelimiter + "bbl");		
 		HashMap<String,String> address_bbl = DataLookup.KeyLookup("/Geocoder/valid_addresses_bbl.csv",",","address", "bbl");
 		while(!file.isEmpty()) {
 			rawLine = file.readLine();
-			String addressID = rawLine.substring(0, rawLine.indexOf(splitchar));
+			String addressID = rawLine.substring(0, rawLine.indexOf(columnCharDelimiter));
 			String imputed_bbl = "";
 			if (isIntersection(addressID)) imputed_bbl ="";
 			else if (addressID.length()>0) imputed_bbl = address_bbl.get(addressID);
-			outFile.println(rawLine + splitchar + imputed_bbl);			
+			outFile.println(rawLine + columnCharDelimiter + imputed_bbl);			
 			if (imputed_bbl.length()>0) count_bbl++;
 		}
 		percent = 100*count_bbl/((double)count_obs);
@@ -276,62 +295,95 @@ public class Geocode {
 		System.out.println("Geocode completed after " + df.format(minutes) + " minutes.");
 	}
 
+	/**
+	 * There are two options for using the Geocoder:
+	 *   1) Supplying no command-line arguments -- this will trigger an
+	 *     interactive console session, prompting the user for the config
+	 *     parameters
+	 *   2) Supplying the full set of command-line arguments -- this will
+	 *     jump right into the geocoding process
+	 * @param args Either 0 or 10 config parameters
+	 */
 	public static void main(String[] args) {
-		/*
-		Geocode g = new Geocode("F:/SAS Temporary Files/for_geocode.txt",
-				"", "|", 
-				"ADDRESS", "ADDRESS", "zip_code", "BORO", "");		
 
+	    if (args.length > 0 && args.length != 10) {
+	        StdOut.println("usage (without arguments): Geocode");
+	        StdOut.println("usage (with arguments): Geocode inputFile outputFile logFile unmatchedAddressFile columnCharDelimiter "
+	                + "columnNameForBuildingNumber columnNameForStreetName columnNameForZipCode columnNameForBorough columnNameForCity");
+            StdOut.println("If any of the above parameters are not applicable, specify blank quotes.");
+            return;
+	    }
 
-		
-		Geocode g = new Geocode("Z:\\Hurricane Sandy\\FEMA 1126\\2013_03_22_0700_FEMA_Regs_NYC_test.txt", 
-								"Z:\\Hurricane Sandy\\FEMA 1126\\my glorious test.txt", "|",
-						"damaged_street", "damaged_street", "damaged_zip", "", "damaged_city");
-		*/
+	    String inputFile,                      // 0
+	            outputFile,                    // 1
+	            logFile,                       // 2
+                unmatchedAddressFile,          // 3
+                columnCharDelimiter,           // 4
+                columnNameForBuildingNumber,   // 5
+                columnNameForStreetName,       // 6
+                columnNameForZipCode,          // 7
+                columnNameForBorough,          // 8
+                columnNameForCity              // 9
+                ;
+
+	    // Interactively retrieving the config parameters from the user
 		if (args.length==0) {
-			//interactive call
-			StdOut.println("What is the full path of the file to geocode? ");
-			String infile = StdIn.readLine().replace("\\", "/");		
-			File inp = new File(infile);
+
+		    StdOut.println("Input file to geocode (can use an absolute filepath, or a relative path from the project root):");
+			inputFile = StdIn.readLine().replace("\\", "/");		
+			File inp = new File(inputFile);
 			while (inp.exists()==false) {
 				StdOut.println("File does not exist. Re-enter full file path");
-				infile = StdIn.readLine().replace("\\", "/");		
-				inp = new File(infile);			
+				inputFile = StdIn.readLine().replace("\\", "/");		
+				inp = new File(inputFile);			
 			}
-			StdOut.println("Do you want to create a new file with the output? Enter the full path of the new file to create:");
-			String outfile = StdIn.readLine().replace("\\", "/");		
-			StdOut.println("What is the delimiter for the input file?");
-			String delim = StdIn.readLine();			
-			StdOut.println("Which variable has the building number for the address?");
-			String housenum = StdIn.readLine();		
-			StdOut.println("Which variable has the street name for the address? (Can be the same column as building number)");
-			String stname = StdIn.readLine();				
-			StdOut.println("Is there a ZIP code variable? Enter it here, otherwise blank:");
-			String zip = StdIn.readLine();			
-			StdOut.println("Is there a standardized BORO code/name variable? Enter it here, otherwise blank:");
-			String boro = StdIn.readLine();				
-			StdOut.println("Is there a neighborhood/town/city variable? Enter it here, otherwise blank:");
-			String city = StdIn.readLine();				
-			Geocode g = new Geocode(infile,outfile,delim,housenum, stname, zip, boro, city);	
-			return;
-		}
-		
-		else if (args.length != 8) {
-			StdOut.println("ERROR: All parameters must be specified in the following order:");
-			StdOut.println("Infile, Outfile, Delimiter, HouseNum Var, Street Name Var, Zipcode Var, Boro Var, Town/Neighborhood Var");
-			StdOut.println("If any of the above parameters are not applicable, specify blank quotes.");
-			return;
-		}
-		
-		String infile = args[0].replace("\\", "/");		
-		String outfile = args[1].replace("\\", "/");		
-		String delim = args[2];			
-		String housenum = args[3];
-		String stname = args[4];				
-		String zip = args[5];			
-		String boro = args[6];		
-		String city = args[7];	
-		Geocode g = new Geocode(infile,outfile,delim,housenum, stname, zip, boro, city);		
 
+			StdOut.println("Do you want to create a new file with the output? Enter the full path of the new file to create:");
+			outputFile = StdIn.readLine().replace("\\", "/");
+
+			StdOut.println("File to write output/logging/error messages to:");
+			logFile = StdIn.readLine().replace("\\", "/");
+
+            StdOut.println("File to write unmatched addresses to:");
+            unmatchedAddressFile = StdIn.readLine().replace("\\", "/");
+
+			StdOut.println("What is the delimiter for the input file?");
+			columnCharDelimiter = StdIn.readLine();
+
+			StdOut.println("Which variable has the building number for the address?");
+			columnNameForBuildingNumber = StdIn.readLine();
+
+			StdOut.println("Which variable has the street name for the address? (Can be the same column as building number)");
+			columnNameForStreetName = StdIn.readLine();
+
+			StdOut.println("Is there a ZIP code variable? Enter it here, otherwise blank:");
+			columnNameForZipCode = StdIn.readLine();
+
+			StdOut.println("Is there a standardized BORO code/name variable? Enter it here, otherwise blank:");
+			columnNameForBorough = StdIn.readLine();
+
+			StdOut.println("Is there a neighborhood/town/city variable? Enter it here, otherwise blank:");
+			columnNameForCity = StdIn.readLine();
+		}
+		// Alternatively, extracting the config parameters from the command-line
+		else {
+		    int i = 0;
+	        inputFile = args[i++].replace("\\", "/");
+	        outputFile = args[i++].replace("\\", "/");
+	        logFile = args[i++].replace("\\", "/");
+	        unmatchedAddressFile = args[i++].replace("\\", "/");
+	        columnCharDelimiter = args[i++];
+	        columnNameForBuildingNumber = args[i++];
+	        columnNameForStreetName = args[i++];
+	        columnNameForZipCode = args[i++];
+	        columnNameForBorough = args[i++];
+	        columnNameForCity = args[i++];
+		}
+
+		new Geocode(inputFile, outputFile,
+                logFile, unmatchedAddressFile,
+                columnCharDelimiter, columnNameForBuildingNumber,
+                columnNameForStreetName, columnNameForZipCode,
+                columnNameForBorough, columnNameForCity);
 	}
 }
