@@ -50,7 +50,6 @@ public class Geocode {
 	        String columnNameForZipCode, String columnNameForBorough,
 	        String columnNameForCity) {
 		final double start = System.currentTimeMillis();
-		int N_args = 0;
 		double percent;
 		DecimalFormat df = new DecimalFormat("#.0");
 
@@ -114,6 +113,7 @@ public class Geocode {
 			return;
 		}
 
+	    int N_args = 0;
 		if (columnNameForBuildingNumber.length()>0) {
 			StdOut.println("House number var: " + columnNameForBuildingNumber);
 			N_args++;
@@ -134,6 +134,7 @@ public class Geocode {
 			StdOut.println("Town/City/Neighborhood var: " + columnNameForCity);
 			N_args++;
 		}
+
 		In file;
 		File tempfile;
 		tempfile =new File("temp.txt");
@@ -176,6 +177,8 @@ public class Geocode {
                 reader = new InputStreamReader(url.openStream());
             }
 
+            // TODO Header-extraction, and column-index analysis, should be done here
+
             CSVReader<String[]> csvParser = new CSVReaderBuilder<String[]>(reader)
                     .strategy(new CSVStrategy(columnCharDelimiter.charAt(0), '\"', '#', false, true))
                     .entryParser(new CSVEntryParser<String[]>() {
@@ -191,36 +194,57 @@ public class Geocode {
                 stname = "";
                 addr = "";
                 
-                if (indexOfZipCodeColumn>=0 && indexOfZipCodeColumn<line.length) zipCode = line[indexOfZipCodeColumn].replaceAll("[^0-9]","");
-                if (indexOfBoroughColumn>=0 && indexOfBoroughColumn<line.length) Borough = Parser.compbl(line[indexOfBoroughColumn].replaceAll("[^0-9A-Za-z\\s]","").toUpperCase().trim());
-                if (indexOfCityColumn>=0 && indexOfCityColumn<line.length) City = Parser.compbl(line[indexOfCityColumn].replaceAll("[^A-Za-z\\s]","").toUpperCase().trim());
-                
+                if (indexOfZipCodeColumn>=0 && indexOfZipCodeColumn<line.length) {
+                    zipCode = line[indexOfZipCodeColumn].replaceAll("[^0-9]","");
+                }
+                if (indexOfBoroughColumn>=0 && indexOfBoroughColumn<line.length) {
+                    Borough = Parser.compbl(line[indexOfBoroughColumn].replaceAll("[^0-9A-Za-z\\s]","").toUpperCase().trim());
+                }
+                if (indexOfCityColumn>=0 && indexOfCityColumn<line.length) {
+                    City = Parser.compbl(line[indexOfCityColumn].replaceAll("[^A-Za-z\\s]","").toUpperCase().trim());
+                }
+
                 //get possible boros from any combination of 3 inputs
                 ArrayList<String> boros = m.getBoros(Borough, zipCode, City);
-                
+
                 GeoSignature sig;
                 if (indexOfBuildingNumberColumn>=0 && indexOfStreetNumberColumn>=0 && indexOfBuildingNumberColumn !=indexOfStreetNumberColumn) {
-                    if (indexOfBuildingNumberColumn<line.length) building = line[indexOfBuildingNumberColumn];
-                    if (indexOfStreetNumberColumn<line.length) stname = line[indexOfStreetNumberColumn];
+                    if (indexOfBuildingNumberColumn<line.length) {
+                        building = line[indexOfBuildingNumberColumn];
+                    }
+                    if (indexOfStreetNumberColumn<line.length) {
+                        stname = line[indexOfStreetNumberColumn];
+                    }
                     sig = new GeoSignature(m, boros, building, stname);     
                 }
                 else {
-                    if (indexOfBuildingNumberColumn>=0 && indexOfBuildingNumberColumn<line.length) addr = line[indexOfBuildingNumberColumn];
-                    else if (indexOfStreetNumberColumn>=0 && indexOfStreetNumberColumn<line.length) addr = line[indexOfStreetNumberColumn];
+                    if (indexOfBuildingNumberColumn>=0 && indexOfBuildingNumberColumn<line.length) {
+                        addr = line[indexOfBuildingNumberColumn];
+                    }
+                    else if (indexOfStreetNumberColumn>=0 && indexOfStreetNumberColumn<line.length) {
+                        addr = line[indexOfStreetNumberColumn];
+                    }
                     //get components of geo entry
                     sig = new GeoSignature(m, boros, addr);             
                 }
 
                 //assign legit identifiers
                 GeoLocation loc = new GeoLocation(m, sig, boros);
-                
-                outFile.println(loc.addressID + columnCharDelimiter + rawLine + columnCharDelimiter + loc.correctHouse + columnCharDelimiter + loc.correctFeatureName1 + 
-                        columnCharDelimiter + loc.correctFeatureName2 + columnCharDelimiter + loc.correctBoro);
-                
-                count_obs++;
-                if (loc.addressID.length()>0) count_geomatch++;
-                if (loc.correctFeatureName1.length()>0 && (sig.isAddress || loc.correctFeatureName2.length()>0)) this.count_feature_name_match++;
 
+                outFile.println(loc.addressID + columnCharDelimiter + rawLine
+                        + columnCharDelimiter + loc.correctHouse
+                        + columnCharDelimiter + loc.correctFeatureName1
+                        + columnCharDelimiter + loc.correctFeatureName2
+                        + columnCharDelimiter + loc.correctBoro);
+
+                count_obs++;
+                if (loc.addressID.length()>0) {
+                    count_geomatch++;
+                }
+                if (loc.correctFeatureName1.length() > 0
+                        && (sig.isAddress || loc.correctFeatureName2.length() > 0)) {
+                    this.count_feature_name_match++;
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
