@@ -84,7 +84,7 @@ public class GeocodeUI extends JPanel
         buildingNumberColumnComboBox = new JComboBox<String>();
         buildingNumberColumnComboBox.setEditable(true);
         
-        streetNameColumnLabel = new JLabel("Street name column:");
+        streetNameColumnLabel = new JLabel("Street name:");
         streetNameColumnComboBox = new JComboBox<String>();
         streetNameColumnComboBox.setEditable(true);
         
