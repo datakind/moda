@@ -388,26 +388,26 @@ public class GeocodeUI extends JPanel
         	String inputFile = inputFileTextField.getText().trim();
         	//File tfile = new File(inputFile);
         	String outputFile = outputFileTextField.getText().trim();
-			String delimiterFile = (String)delimiterFileComboBox.getSelectedItem(); // delimiterFileTextField.getText().trim();
-			String buildingNumberColumn = (String)buildingNumberColumnComboBox.getSelectedItem(); // buildingNumberColumnTextField.getText().trim();
-			String steetNameColumn = (String)streetNameColumnComboBox.getSelectedItem(); // steetNameColumnTextField.getText().trim();
-			String zipCodeColumn = (String) zipCodeColumnComboBox.getSelectedItem(); // zipCodeColumnTextField.getText().trim();
-			String boroColumn = (String) boroColumnComboBox.getSelectedItem(); // boroColumnTextField.getText().trim();
-			String cityColumn = (String) cityColumnComboBox.getSelectedItem(); // cityColumnTextField.getText().trim();
+			String delimiterFile = (String)delimiterFileComboBox.getSelectedItem();
+			String buildingNumberColumn = ((String)buildingNumberColumnComboBox.getSelectedItem()).trim();
+			String steetNameColumn = ((String)streetNameColumnComboBox.getSelectedItem()).trim();
+			String zipCodeColumn = ((String) zipCodeColumnComboBox.getSelectedItem()).trim();
+			String boroColumn = ((String) boroColumnComboBox.getSelectedItem()).trim();
+			String cityColumn = ((String) cityColumnComboBox.getSelectedItem()).trim();
 			
 			// validate those inputs (more validation done in Geocoder, this is the bare minimum
         	if (outputFile.equals("temp.txt") ) {
         		JOptionPane.showMessageDialog(null,
-        			    "Out File cannot be temp.txt! This file is used by the Geocoder application.");
+        			    "Output File cannot be temp.txt! This file is used by the Geocoder application.");
         	}
         	// TODO Validate URL as well?
         	else if (!inputExists(inputFile)) { 
         		JOptionPane.showMessageDialog(null,
         			    "Input File must be a valid file!");
         	}
-        	else if (delimiterFile.length() > 1) {
+        	else if (delimiterFile.length() != 1) {
         		JOptionPane.showMessageDialog(null,
-        			    "Delimiter not be more than one character in length.");
+        			    "Delimiter must be one character in length.");
         	}
         	else if (buildingNumberColumn.equals("") && steetNameColumn.equals("")) {
         		JOptionPane.showMessageDialog(null,
