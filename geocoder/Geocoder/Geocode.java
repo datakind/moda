@@ -186,7 +186,17 @@ public class Geocode {
                         public String[] parseEntry(String... data) { return data; }
                     })
                     .build();
+
             while ((line = csvParser.readNext()) != null) {
+                rawLine = "";
+                StringBuilder rawLineBuilder = new StringBuilder();
+                for (String column : line) {
+                    if (rawLineBuilder.length() > 0) {
+                        rawLineBuilder.append(',');
+                    }
+                    rawLineBuilder.append(column);
+                }
+                rawLine = rawLineBuilder.toString();
 
                 zipCode = "";
                 Borough = "";
