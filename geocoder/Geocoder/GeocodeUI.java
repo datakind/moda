@@ -2,6 +2,7 @@ package Geocoder;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -13,10 +14,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -25,7 +28,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import com.googlecode.jcsv.CSVStrategy;
@@ -48,6 +53,8 @@ public class GeocodeUI extends JPanel
     
     JButton chooseInputFileButton, refreshColumnsButton, startGeocodeButton;
     
+    GeocodeUIWorker worker;
+    
     JFileChooser inputFileChooser;
     
     public GeocodeUI() {
@@ -55,6 +62,7 @@ public class GeocodeUI extends JPanel
     	// Set up input / output file fields and button
         inputFileLabel = new JLabel("Input file path:" );
         inputFileTextField = new JTextField();
+        inputFileTextField.setColumns(1); // set columns to avoid changes to preferred size 
         
         delimiterFileLabel = new JLabel("Input file delimiter:");
         // TODO Set max length of delimiter text field to 1 character
@@ -64,6 +72,7 @@ public class GeocodeUI extends JPanel
         
         outputFileLabel = new JLabel("Output file path:");
         outputFileTextField = new JTextField();
+        outputFileTextField.setColumns(1); // set columns to avoid changes to preferred size  
         
         inputFileChooser = new JFileChooser();
         chooseInputFileButton = new JButton("Choose an input file..");
@@ -169,7 +178,7 @@ public class GeocodeUI extends JPanel
         filePane.add(fileExplainationLabel, c);
         filePane.setBorder(
                 BorderFactory.createCompoundBorder(
-                                BorderFactory.createTitledBorder("Input/Outfile Files"),
+                                BorderFactory.createTitledBorder("Input/Output Files"),
                                 BorderFactory.createEmptyBorder(5,5,5,5)));
         
         
@@ -254,13 +263,29 @@ public class GeocodeUI extends JPanel
                                 BorderFactory.createEmptyBorder(5,5,5,5)));
         
         // Add the prepared panes to the window
-        this.setLayout(new BorderLayout(0,1));
+        // layout 3.0 - with graphic
+        JLabel logoImage = new JLabel();
+        getClass().getResource("logo.png");
+        logoImage.setIcon(new ImageIcon(getClass().getResource("logo.png")));
+
+        JPanel taskPanel = new JPanel(new BorderLayout(0,1));
+        taskPanel.add(filePane, BorderLayout.PAGE_START );
+        taskPanel.add(columnsPane, BorderLayout.CENTER);
+        taskPanel.add(startGeocodeButton, BorderLayout.PAGE_END);
+        
+        this.setLayout(new FlowLayout());
+        this.add(logoImage);
+        
+        this.add(taskPanel);
+        
+        // layout 2.0 - buttons and frames
+        /*this.setLayout(new BorderLayout(0,1));
         
         this.add(filePane, BorderLayout.PAGE_START );
         this.add(columnsPane, BorderLayout.CENTER);
-        this.add(startGeocodeButton, BorderLayout.PAGE_END);
+        this.add(startGeocodeButton, BorderLayout.PAGE_END);*/
         
-        // This is the old layout using GridLayout - not too pretty
+        // This is the old 1.0 layout using GridLayout - not too pretty
         /*this.setLayout(new GridLayout(0,2));
         add(chooseInputFileButton);
         add(refreshColumnsButton);
@@ -390,13 +415,17 @@ public class GeocodeUI extends JPanel
         	String outputFile = outputFileTextField.getText().trim();
 			String delimiterFile = (String)delimiterFileComboBox.getSelectedItem();
 			String buildingNumberColumn = ((String)buildingNumberColumnComboBox.getSelectedItem()).trim();
-			String steetNameColumn = ((String)streetNameColumnComboBox.getSelectedItem()).trim();
+			String streetNameColumn = ((String)streetNameColumnComboBox.getSelectedItem()).trim();
 			String zipCodeColumn = ((String) zipCodeColumnComboBox.getSelectedItem()).trim();
 			String boroColumn = ((String) boroColumnComboBox.getSelectedItem()).trim();
 			String cityColumn = ((String) cityColumnComboBox.getSelectedItem()).trim();
 			
 			// validate those inputs (more validation done in Geocoder, this is the bare minimum
-        	if (outputFile.equals("temp.txt") ) {
+			if (worker != null && !worker.isDone()) {
+				JOptionPane.showMessageDialog(null,
+        			    "Geocoding still in progress.. Please check the terminal window for updates.");
+			}
+			else if (outputFile.equals("temp.txt") ) {
         		JOptionPane.showMessageDialog(null,
         			    "Output File cannot be temp.txt! This file is used by the Geocoder application.");
         	}
@@ -409,21 +438,34 @@ public class GeocodeUI extends JPanel
         		JOptionPane.showMessageDialog(null,
         			    "Delimiter must be one character in length.");
         	}
-        	else if (buildingNumberColumn.equals("") && steetNameColumn.equals("")) {
+        	else if (buildingNumberColumn.equals("") && streetNameColumn.equals("")) {
         		JOptionPane.showMessageDialog(null,
         			    "Either Building Number Column or Street Name Column must be specfied.");
         	}
         	else {
-        		Geocode geocode = new Geocode(
+        		worker = new GeocodeUIWorker(inputFile,
+        				outputFile,
+//        				"", "", // TODO error-log file and unmatched-address file
+        				delimiterFile,
+        				buildingNumberColumn,
+        				streetNameColumn,
+        				zipCodeColumn,
+        				boroColumn,
+        				cityColumn);
+        		worker.execute();
+        		
+        		JOptionPane.showMessageDialog(null,
+        			    "Geocoding process started.. Please check the terminal window for updates.");
+        		/*Geocode geocode = new Geocode(
         				inputFile,
         				outputFile,
 //        				"", "", // TODO error-log file and unmatched-address file
         				delimiterFile,
         				buildingNumberColumn,
-        				steetNameColumn,
+        				streetNameColumn,
         				zipCodeColumn,
         				boroColumn,
-        				cityColumn);
+        				cityColumn);*/
         	}
 
         }
@@ -436,7 +478,7 @@ public class GeocodeUI extends JPanel
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("GeocodeUI");
+        JFrame frame = new JFrame("NYC Geocoder");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //Add content to the window.
         frame.add(new GeocodeUI());
