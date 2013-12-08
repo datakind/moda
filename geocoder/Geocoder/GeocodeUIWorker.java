@@ -40,7 +40,7 @@ public class GeocodeUIWorker extends SwingWorker<Void, Void> {
 					this.boroColumn,
 					this.cityColumn);
 		} catch (Exception e) {
-			System.out.println(e.toString());
+			e.printStackTrace();
 		}
 		
 		return null;

@@ -1,11 +1,9 @@
 package Geocoder;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +14,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.List;
+
+// only used in layout 1.0
+//import java.awt.Dimension;
+//import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -41,7 +43,9 @@ public class GeocodeUI extends JPanel
 
     private JLabel inputFileLabel, outputFileLabel, delimiterFileLabel, buildingNumberColumnLabel, streetNameColumnLabel;
     private JLabel zipCodeColumnLabel, boroColumnLabel, cityColumnLabel, inputColumnExplanationLabel, fileExplainationLabel;
-    private JLabel fileLabel, inputColumnLabel;
+    
+    // only used in layout 1.0
+    //private JLabel fileLabel, inputColumnLabel;
     
     private JTextField inputFileTextField, outputFileTextField;
     
@@ -50,12 +54,13 @@ public class GeocodeUI extends JPanel
     
     private JButton chooseInputFileButton, refreshColumnsButton, startGeocodeButton;
     
-    GeocodeUIWorker worker;
+    private GeocodeUIWorker worker;
     
-    JFileChooser inputFileChooser;
+    private JFileChooser inputFileChooser;
     
     /**
-     * Constructor to create and layout the fields used in the Geocode User Interface.
+     * Constructor to create and layout the fields used in the Geocode User
+     * Interface.
      */
     public GeocodeUI() {
         
@@ -78,7 +83,7 @@ public class GeocodeUI extends JPanel
         chooseInputFileButton = new JButton("Choose an input file..");
         chooseInputFileButton.addActionListener(this);
 
-        fileLabel = new JLabel("Input/Output files:");
+        //fileLabel = new JLabel("Input/Output files:");
         fileExplainationLabel = new JLabel(
         		"<html>Input file must be any valid pre-existing file. <br>" + 
         		"Delimiter can only be one character in length. <br>" + 
@@ -109,7 +114,7 @@ public class GeocodeUI extends JPanel
         cityColumnComboBox = new JComboBox<String>();
         cityColumnComboBox.setEditable(true);
         
-        inputColumnLabel = new JLabel("Input file columns:");
+        //inputColumnLabel = new JLabel("Input file columns:");
         inputColumnExplanationLabel = new JLabel(
         		"<html>Choose the appropriate column names which contain the data for geocoding. <br>" + 
         		"The same column may be used multiple times. <br>" + 
