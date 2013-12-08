@@ -67,7 +67,6 @@ public class GeocodeUI extends JPanel
     	// Set up input / output file fields and button
         inputFileLabel = new JLabel("Input file path:" );
         inputFileTextField = new JTextField();
-        inputFileTextField.setColumns(1); // set columns to avoid changes to preferred size 
         
         delimiterFileLabel = new JLabel("Input file delimiter:");
         // field must be 1 character, validated before 'Start' Geocode process
@@ -77,7 +76,6 @@ public class GeocodeUI extends JPanel
         
         outputFileLabel = new JLabel("Output file path:");
         outputFileTextField = new JTextField();
-        outputFileTextField.setColumns(1); // set columns to avoid changes to preferred size  
         
         inputFileChooser = new JFileChooser();
         chooseInputFileButton = new JButton("Choose an input file..");
@@ -121,6 +119,17 @@ public class GeocodeUI extends JPanel
         		"At least Building Number or Street Name field must be specified. <br>" + 
         		"All other fields can be left blank. </html>");
 
+        // Set Prototype display values for combo boxes and columns for text 
+        // fields to prevent resizing issue
+        inputFileTextField.setColumns(1);
+        delimiterFileComboBox.setPrototypeDisplayValue(",");
+        outputFileTextField.setColumns(1);
+	    buildingNumberColumnComboBox.setPrototypeDisplayValue("None");
+		streetNameColumnComboBox.setPrototypeDisplayValue("None");
+	    zipCodeColumnComboBox.setPrototypeDisplayValue("None");
+	    boroColumnComboBox.setPrototypeDisplayValue("None");
+	    cityColumnComboBox.setPrototypeDisplayValue("None");
+	    
         
         // The button to start the geocode process 
         startGeocodeButton = new JButton("Start Geocoding");
@@ -319,7 +328,7 @@ public class GeocodeUI extends JPanel
         add(startGeocodeButton);*/
     }
 
-	public String [] getHeaders(String fileName, String delimiter) {
+	private String [] getHeaders(String fileName, String delimiter) {
 	    if (delimiter == null || delimiter.length() == 0) {
 	        return null;
 	    }
