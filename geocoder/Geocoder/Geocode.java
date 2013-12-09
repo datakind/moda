@@ -186,6 +186,7 @@ public class Geocode {
                         public String[] parseEntry(String... data) { return data; }
                     })
                     .build();
+            csvParser.readNext(); // Skipping the header
 
             while ((line = csvParser.readNext()) != null) {
                 rawLine = "";
@@ -326,7 +327,7 @@ public class Geocode {
 		file = new In("temp.txt");
 		outFile = new Out(outputFilePath);
 		rawLine = file.readLine();
-		outFile.println(rawLine + columnCharDelimiter + "bbl");		
+		outFile.println(rawLine + columnCharDelimiter + "bbl");
 		HashMap<String,String> address_bbl = DataLookup.KeyLookup("/Geocoder/valid_addresses_bbl.csv",",","address", "bbl");
 		while(!file.isEmpty()) {
 			rawLine = file.readLine();
